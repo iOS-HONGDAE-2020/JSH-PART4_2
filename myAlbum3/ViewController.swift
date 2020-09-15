@@ -14,6 +14,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     @IBOutlet weak var collectionView: UICollectionView!
     
     var fetchResults: [PHAssetCollection] = []
+
     let imageManger: PHCachingImageManager = PHCachingImageManager()
     var fetchOptions: PHFetchOptions!
     
@@ -21,8 +22,6 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         super.viewDidLoad()
         collectionView.delegate = self
         collectionView.dataSource = self
-        
-        self.navigationController?.setToolbarHidden(true, animated: true)
         
         // title
         self.navigationItem.title = "앨범"
@@ -39,7 +38,6 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         // nib
         collectionView.register(CollectionViewCell1.nib(), forCellWithReuseIdentifier: CollectionViewCell1.identifier)
     
-        
         // 권한 설정
         photoAurthoriazation()
     }
@@ -47,10 +45,11 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(true)
         collectionView.reloadData()
+        self.navigationController?.setToolbarHidden(true, animated: true)
+        
     }
     
     //MARK: 이미지 가져오기
-    
     func requestCollection() {
         // recent
         let userAlbumResult: PHFetchResult<PHAssetCollection> = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .smartAlbumUserLibrary, options: nil)
@@ -61,25 +60,15 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         
         // PHFetchResult<PHAssetCollection> -> PHAssetCollection
         // firstObject(The first object in the fetch result) : 첫번째 object가 아닌 다음 단계(차원?) 첫번째 배열?????
-        guard let userAlbumCollection: PHAssetCollection = userAlbumResult.firstObject else {
-            return
+        if let userAlbumCollection: PHAssetCollection = userAlbumResult.firstObject {
+            self.fetchResults.append(userAlbumCollection)
         }
-        guard let favoriteCollection: PHAssetCollection = favoriteResult.firstObject else {
-            return
+        if let favoriteCollection: PHAssetCollection = favoriteResult.firstObject {
+            self.fetchResults.append(favoriteCollection)
         }
-        //        guard let albumCollection: PHAssetCollection = albumResult.firstObject else {
-        //            return
-        //        }
-        // fetchResults 리스트에 추가
-        self.fetchResults.append(userAlbumCollection)
-        self.fetchResults.append(favoriteCollection)
-        
-        // 앨범 1개만 나와서 수정
         for i in 0..<albumResult.count {
-            let albumCollection = albumResult.object(at: i)
-            self.fetchResults.append(albumCollection)
+            self.fetchResults.append(albumResult.object(at: i))
         }
-        //print(fetchResults)
     }
     
     func photoAurthoriazation() {
@@ -107,18 +96,15 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CollectionViewCell1.identifier, for: indexPath) as! CollectionViewCell1
         
-        //
         cell.clipsToBounds = true
         cell.imageView.layer.cornerRadius = 15
         // 배열에서 빠져나옴
         let fetchResult = fetchResults[indexPath.item]
-        //print(fetchResult)
-        
+   
         let fetchResultData = PHAsset.fetchAssets(in: fetchResult, options: fetchOptions)
         cell.nameLabel.text = fetchResult.localizedTitle
         cell.countLabel.text = String(fetchResultData.count)
-        //print(fetchResultData)
-        // 강력
+     
         let options = PHImageRequestOptions()
         options.resizeMode = .exact
         if let asset: PHAsset = fetchResultData.firstObject {
@@ -141,8 +127,13 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let View2 = storyboard?.instantiateViewController(identifier: "vc2") as! ViewController2
         let fetchResult = fetchResults[indexPath.item]
-        View2.sutTitle = fetchResult.localizedTitle! //title
+        View2.sutTitle = fetchResult.localizedTitle!
         View2.fetchResults = fetchResults[indexPath.item]
+        let fetchResultData = PHAsset.fetchAssets(in: fetchResult, options: nil)
+        
+        let asset: PHAsset = fetchResultData.object(at: indexPath.item)
+        //View2.assets2 = asset
+       
         navigationController?.pushViewController(View2, animated: true)
     }
     

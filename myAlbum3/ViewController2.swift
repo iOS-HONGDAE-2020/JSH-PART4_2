@@ -9,19 +9,20 @@
 import UIKit
 import Photos
 
-class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
-    
-    @IBOutlet weak var toolBar: UIToolbar!
-    
+class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, PHPhotoLibraryChangeObserver {
+
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var sortItemButton: UIBarButtonItem!
     @IBOutlet weak var uploadButton: UIBarButtonItem!
     @IBOutlet weak var removeButton: UIBarButtonItem!
     
     var sutTitle: String = ""
-    var fetchResults: PHAssetCollection!
+    var fetchResults: PHAssetCollection?
+    var fetchResultData: PHFetchResult<PHAsset>!
+ 
     var fetchOptions = PHFetchOptions()
     let imageManger: PHCachingImageManager = PHCachingImageManager()
+    
     var sort = true
     
     override func viewDidLoad() {
@@ -49,19 +50,24 @@ class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionV
         
         // choice button
         setupBarButtonItems()
+        
+        //sortImage()
         sortItemButton.title = "최신순"
+        fetchResultData = PHAsset.fetchAssets(in: fetchResults!, options: nil)
+        
+        PHPhotoLibrary.shared().register(self)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(true)
-        collectionView.reloadData()
+        //collectionView.reloadData()
     }
     
     
     //MARK: 선택일때와 취소일때 화면
     enum Mode {
         case view
-        case select
+        case cancel
     }
     // 추가됨
     var dictionarySelectedIndexPath: [IndexPath: Bool] = [ : ]
@@ -79,7 +85,7 @@ class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionV
                 self.navigationItem.title = "\(sutTitle)"      // 타이틀 제목
                 self.navigationController?.setToolbarHidden(false, animated: true)
                 
-            case .select:
+            case .cancel:
                 selectBarButton.title = "취소"                  // 버튼 이름
                 self.navigationItem.hidesBackButton = true     // 이전 버튼 숨김
                 collectionView.allowsMultipleSelection = true  // 다중 선택 가능
@@ -104,7 +110,7 @@ class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionV
     }()
     
     @objc func didSelectButtonClicked(_ sender: UIBarButtonItem) {
-        mMode = mMode == .view ? .select : .view
+        mMode = mMode == .view ? .cancel : .view
     }
     
     // 총 선택한 이미지 수
@@ -118,11 +124,9 @@ class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionV
             // 클릭 이미지 assets 전달
             let View3 = storyboard?.instantiateViewController(identifier: "vc3") as! ViewController3
             View3.assets = assets[indexPath.row]
-            let date1 = assets[indexPath.row].creationDate!
-            print(date1, "date1")
             View3.title1 = assets[indexPath.row].creationDate
             navigationController?.pushViewController(View3, animated: true)
-        case .select:
+        case .cancel:
             uploadButton.isEnabled = true        // 업로드 버튼 활성화
             removeButton.isEnabled = true        // 삭제 버튼 활성화
             dictionarySelectedIndexPath[indexPath] = true
@@ -137,7 +141,7 @@ class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionV
     
     // 해제한 이미지 수
     func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        if mMode == .select {
+        if mMode == .cancel {
             //dictionarySelectedIndexPath[indexPath] = false
         }
         let cell = collectionView.cellForItem(at: indexPath)
@@ -152,28 +156,31 @@ class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionV
             }
         }
     }
-    
-    @IBAction func sortTapButton(_ sender: Any) {
-        var sortItem = collectionView.indexPathsForVisibleItems
-        var reversedSortItem = sortItem.sorted() {$0 > $1}
-        if sort {
-            sortItemButton.title = "오래된순"
-            print(sort, "오래된순")
-            //sortItem.sort(by: {$01.item < $1.item})
-            
-            print(reversedSortItem, "오래된순")
-            //self.sortDecide(true)
-        } else {
-            sortItemButton.title = "최신순"
-            
-            print(sort, "최신순")
-            //sortItem.sort(by: {$01.item < $1.item})
-            sortItem.sort(by: {$01.item > $1.item})
-            //self.sortDecide(false)
+
+    //MARK: 이미지 정렬
+    func sortImage(_ sort: Bool) {
+        if sort == true {
+            fetchResultData = PHAsset.fetchAssets(in: fetchResults!, options: nil)
+        } else if sort == false {
+            fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            fetchResultData = PHAsset.fetchAssets(in: fetchResults!, options: fetchOptions)
         }
-        sort = !sort
     }
     
+    @IBAction func sortTapButton(_ sender: UIBarButtonItem) {
+        if sort {
+            sortItemButton.title = "오래된순"
+            sortImage(false)
+        } else {
+            sortItemButton.title = "최신순"
+            sortImage(true)
+        }
+        sort = !sort
+        self.collectionView.reloadSections(IndexSet(0...0)) //
+    }
+    
+    
+    //MARK: CollectionView
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return fetchResults!.estimatedAssetCount
     }
@@ -181,13 +188,10 @@ class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionV
     var assets: [PHAsset] = []
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CollectionViewCell2.identifier, for: indexPath) as! CollectionViewCell2
-        
-        let fetchResultData = PHAsset.fetchAssets(in: fetchResults!, options: fetchOptions)
-        print(fetchResultData, "fetchResultData")
-        
+
         let asset: PHAsset = fetchResultData.object(at: indexPath.row)
         assets.append(asset)
-        print(asset, "asset")
+        
         let options = PHImageRequestOptions()
         options.resizeMode = .exact
         imageManger.requestImage(for: asset,
@@ -200,6 +204,7 @@ class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionV
     }
     
     
+    //MARK: Button
     @IBAction func uploadTapButton(_ sender: Any) {
         if let selectedItems = collectionView.indexPathsForSelectedItems {
             let items = selectedItems.map{$0.item}.sorted().reversed()
@@ -211,10 +216,15 @@ class ViewController2: UIViewController, UICollectionViewDelegate, UICollectionV
         }
     }
     
-    
     @IBAction func removeTapButton(_ sender: Any) {
         let selectedItems = collectionView.indexPathsForSelectedItems
         let vc = UIActivityViewController(activityItems: [selectedItems as Any], applicationActivities: nil)
         present(vc, animated: true)
     }
+    
+    func photoLibraryDidChange(_ changeInstance: PHChange) {
+        
+    }
 }
+
+

@@ -115,8 +115,16 @@
                                 <rect key="frame" x="0.0" y="692" width="414" height="44"/>
                                 <items>
                                     <navigationItem id="i6P-Co-qaQ">
-                                        <barButtonItem key="leftBarButtonItem" title="Item" image="square.and.arrow.up" catalog="system" id="nsg-ug-Wal"/>
-                                        <barButtonItem key="rightBarButtonItem" title="Item" image="trash" catalog="system" id="am0-K0-FJC"/>
+                                        <barButtonItem key="leftBarButtonItem" title="Item" image="square.and.arrow.up" catalog="system" id="nsg-ug-Wal">
+                                            <connections>
+                                                <action selector="uploadTapButton:" destination="i9W-nq-1lb" id="NEc-hs-Zlo"/>
+                                            </connections>
+                                        </barButtonItem>
+                                        <barButtonItem key="rightBarButtonItem" title="Item" image="trash" catalog="system" id="am0-K0-FJC">
+                                            <connections>
+                                                <action selector="removeTapButton:" destination="i9W-nq-1lb" id="L34-3v-z1l"/>
+                                            </connections>
+                                        </barButtonItem>
                                     </navigationItem>
                                 </items>
                             </navigationBar>
@@ -134,7 +142,11 @@
                         <viewLayoutGuide key="safeArea" id="ICf-TM-Caq"/>
                     </view>
                     <toolbarItems>
-                        <barButtonItem title="Item" width="415.66666666666669" id="Je2-17-Ld4"/>
+                        <barButtonItem title="Item" width="415.66666666666669" id="Je2-17-Ld4">
+                            <connections>
+                                <action selector="sortTapButton:" destination="i9W-nq-1lb" id="E0i-M2-sV0"/>
+                            </connections>
+                        </barButtonItem>
                     </toolbarItems>
                     <navigationItem key="navigationItem" id="bfB-O4-1Fx"/>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
@@ -174,15 +186,28 @@
                         <viewLayoutGuide key="safeArea" id="PC6-oF-O9t"/>
                     </view>
                     <toolbarItems>
-                        <barButtonItem title="Item" image="square.and.arrow.up" catalog="system" id="VQb-Xg-JTn"/>
+                        <barButtonItem title="Item" image="square.and.arrow.up" catalog="system" id="VQb-Xg-JTn">
+                            <connections>
+                                <action selector="uploadButton:" destination="Mju-gt-zcC" id="TUa-D2-8cA"/>
+                            </connections>
+                        </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="Ei9-mB-g35"/>
-                        <barButtonItem title="Item" id="RCt-Xr-zp9"/>
+                        <barButtonItem title="Item" id="RCt-Xr-zp9">
+                            <connections>
+                                <action selector="heartTapButton:" destination="Mju-gt-zcC" id="ohZ-5A-Vjs"/>
+                            </connections>
+                        </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="gqp-nd-BMV"/>
-                        <barButtonItem title="Item" image="trash" catalog="system" id="dW9-TO-GG8"/>
+                        <barButtonItem title="Item" image="trash" catalog="system" id="dW9-TO-GG8">
+                            <connections>
+                                <action selector="removeTapButton:" destination="Mju-gt-zcC" id="GGV-XR-YdM"/>
+                            </connections>
+                        </barButtonItem>
                     </toolbarItems>
                     <navigationItem key="navigationItem" id="P5Y-yy-oLK"/>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="heartButton" destination="RCt-Xr-zp9" id="mDp-ai-j54"/>
                         <outlet property="imageView" destination="YPd-1h-B7a" id="Aar-KR-8bD"/>
                         <outlet property="scrollView" destination="ppV-fe-u8b" id="Uep-pE-BFt"/>
                     </connections>
